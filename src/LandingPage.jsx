@@ -8,6 +8,8 @@ import {
   Download,
   ChevronsUp,
 } from "lucide-react";
+import { getLeafProperties } from "./constants/leafProperties";
+import { LEAF_SCIENTIFIC_NAMES } from "./constants/leafProperties";
 
 export default function LandingPage() {
   const [image, setImage] = useState(null);
@@ -18,6 +20,8 @@ export default function LandingPage() {
   const [showResults, setShowResults] = useState(false);
   const [animateBackground, setAnimateBackground] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [formattedConfidence, setFormattedConfidence] = useState("");
+  const [leafProperties, setLeafProperties] = useState([]);
 
   useEffect(() => {
     setAnimateBackground(true);
@@ -72,7 +76,7 @@ export default function LandingPage() {
       let formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("BACKEND_API_URL", {
+      const response = await fetch("http://localhost:8001/predict", {
         method: "POST",
         body: formData,
       });
@@ -80,11 +84,22 @@ export default function LandingPage() {
       if (!response.ok) throw new Error("Failed to analyze image");
 
       const data = await response.json();
-      console.log("Whole result:");
-      console.log(data);
+      console.log("Whole result:", data);
+
+      // Calculate values before setting state
+      const formatted = (data.confidence * 100).toFixed(2);
+      const properties = getLeafProperties(data.class) || [];
+
+      console.log("Properties:", properties); // Debugging
+
+      // Set all state values together
       setResults(data);
+      setFormattedConfidence(formatted);
+      setLeafProperties(properties);
     } catch (error) {
       setResults({ error: "Failed to analyze image. Please try again." });
+      setFormattedConfidence("");
+      setLeafProperties([]);
     } finally {
       setIsAnalyzing(false);
     }
@@ -295,11 +310,14 @@ export default function LandingPage() {
                       <p className="text-gray-400 mb-1 text-sm">
                         Leaf Category:
                       </p>
-                      <p className="text-xl font-semibold text-green-400 group-hover/item:text-green-300 transition-colors duration-300">
+                      <p className="text-2xl font-bold text-green-400 group-hover/item:text-green-300 transition-colors duration-300">
                         {results.class}
                       </p>
-                      <p className="text-gray-500 text-sm mt-1 italic">
-                        {results.scientificName}
+                      <p className="text-lg mt-2 text-blue-400 font-semibold italic group-hover/item:text-blue-300 transition-colors duration-300">
+                        Scientific Name:{" "}
+                        <span className="italic">
+                          {LEAF_SCIENTIFIC_NAMES[results.class] || "Unknown"}
+                        </span>
                       </p>
                     </div>
 
@@ -307,13 +325,13 @@ export default function LandingPage() {
                       <p className="text-gray-400 mb-1 text-sm">Confidence:</p>
                       <div className="flex items-center">
                         <p className="text-xl font-semibold text-blue-400">
-                          {results.confidence}%
+                          {formattedConfidence}%
                         </p>
                         <div className="ml-4 flex-grow bg-gray-700 h-2 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-gradient-to-r from-green-500 to-blue-500 relative"
                             style={{
-                              width: `${results.confidence}%`,
+                              width: `${formattedConfidence}%`,
                               transition: "width 1s ease-in-out",
                             }}
                           >
@@ -327,8 +345,8 @@ export default function LandingPage() {
                       <p className="text-gray-400 mb-2 text-sm">
                         Medicinal Properties:
                       </p>
-                      {/* <div className="flex flex-wrap gap-2">
-                        {results.properties.map((property, index) => (
+                      <div className="flex flex-wrap gap-2">
+                        {leafProperties.map((property, index) => (
                           <span
                             key={index}
                             className="bg-gray-700 text-green-300 px-3 py-1 rounded-full text-xs font-medium hover:bg-gray-600 transition-colors duration-300"
@@ -336,7 +354,7 @@ export default function LandingPage() {
                             {property}
                           </span>
                         ))}
-                      </div> */}
+                      </div>
                     </div>
 
                     {results.confidence < 0.8 && (
