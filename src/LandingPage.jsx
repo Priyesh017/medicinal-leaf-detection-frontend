@@ -11,10 +11,10 @@ import {
 import { getLeafProperties } from "./constants/leafProperties";
 import { LEAF_SCIENTIFIC_NAMES } from "./constants/leafProperties";
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+// import html2canvas from "html2canvas";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import Features from "./Features";
+import Features from "./components/Features";
 
 export default function LandingPage() {
   const [image, setImage] = useState(null);
@@ -24,7 +24,7 @@ export default function LandingPage() {
   const [dragActive, setDragActive] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [animateBackground, setAnimateBackground] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
+  // const [selectedFile, setSelectedFile] = useState(null);
   const [formattedConfidence, setFormattedConfidence] = useState("");
   const [leafProperties, setLeafProperties] = useState([]);
 
@@ -103,6 +103,7 @@ export default function LandingPage() {
       setLeafProperties(properties);
     } catch (error) {
       setResults({ error: "Failed to analyze image. Please try again." });
+      console.log(error);
       setFormattedConfidence("");
       setLeafProperties([]);
     } finally {
